@@ -17,15 +17,9 @@ package Box2dEx.Helper {
          
          while (b != null)
          {
-            b.WakeUp ();
+            b.SetAwake (true);
             b = b.m_next;
          }
-      }
-      
-      public static function CreateGroundBody (world:b2World):void
-      {
-         var bd:b2BodyDef = new b2BodyDef();
-         world.m_groundBody = world.CreateBody(bd);
       }
    }
 }

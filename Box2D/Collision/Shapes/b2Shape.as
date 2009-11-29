@@ -77,7 +77,7 @@ package Box2D.Collision.Shapes
 		/// @param input the ray-cast input parameters.
 		/// @param transform the transform to be applied to the shape.
 		//virtual void RayCast(b2RayCastOutput* output, const b2RayCastInput& input, const b2Transform& transform) const = 0;
-		public function RayCast(output:b2RayCastOutput, input:b2RayCastInput, transform:b2Transform):void {}
+		public function RayCast(output:b2RayCastOutput, input:b2RayCastInput, transform:b2Transform):Boolean {return false;}
 
 		/// Given a transform, compute the associated axis aligned bounding box for this shape.
 		/// @param aabb returns the axis aligned box.
@@ -101,6 +101,18 @@ package Box2D.Collision.Shapes
 		{
 			return m_type;
 		}
+		
+//***********************************************************************
+// hackings
+//***********************************************************************
+		
+		// call by b2Body
+		// this function should  NOT change the world position
+		public function MoveLocalPosition (dx:Number, dy:Number):void
+		{
+			// to override
+		}
+		
 	} // class
 } // package
 //#endif

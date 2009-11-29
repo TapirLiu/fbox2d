@@ -68,7 +68,7 @@ package Box2D.Collision.Shapes
 		//bool TestPoint(const b2Transform& transform, const b2Vec2& p) const;
 
 		/// Implement b2Shape.
-		//void RayCast(b2RayCastOutput* output, const b2RayCastInput& input, const b2Transform& transform) const;
+		//bool RayCast(b2RayCastOutput* output, const b2RayCastInput& input, const b2Transform& transform) const;
 
 		/// @see b2Shape::ComputeAABB
 		//void ComputeAABB(b2AABB* aabb, const b2Transform& transform) const;
@@ -149,6 +149,26 @@ package Box2D.Collision.Shapes
 			//b2Assert(0 <= index && index < m_vertexCount);
 			return (m_vertices[index] as b2Vec2).Clone ();
 		}
+		
+//***********************************************************************
+// hackings
+//***********************************************************************
+		
+		// call by b2Body
+		// this function should  NOT change the world position
+		override public function MoveLocalPosition (dx:Number, dy:Number):void
+		{
+			m_centroid.x += dx;
+			m_centroid.y += dy;
+			
+			for (var i:int = 0; i < m_vertexCount; ++ i)
+			{
+				var vertex:b2Vec2 = m_vertices [i];
+				vertex.x += dx;
+				vertex.y += dy;
+			}
+		}
+		
 	} // class
 } // package
 //#endif

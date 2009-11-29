@@ -11,9 +11,5 @@ package Box2dEx.Helper {
    
    public class b2eBodyHelper
    {
-      public static function SetStatic (body:b2Body, static:Boolean):void
-      {
-         body.ResetMass (static);
-      }
    }
 }
