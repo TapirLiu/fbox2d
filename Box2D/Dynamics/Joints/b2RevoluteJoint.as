@@ -123,6 +123,54 @@ package Box2D.Dynamics.Joints
 		{
 			return m_motorSpeed;
 		}
+		
+//***********************************************************************
+// hackings
+//***********************************************************************
+		
+		// call by b2Body
+		// this function should  NOT change the world position
+		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
+		{
+			if (jointEdge == m_edgeA)
+			{
+				m_localAnchor1.x += dx;
+				m_localAnchor1.y += dy;
+			}
+			else if (jointEdge == m_edgeB)
+			{
+				m_localAnchor2.x += dx;
+				m_localAnchor2.y += dy;
+			}
+		}
+
+		override protected function NotifyBodyChanged (oldBody:b2Body, isBodyA:Boolean):void
+		{
+			var worldAnchor:b2Vec2;
+			
+trace ("111 m_referenceAngle = " + m_referenceAngle);
+			if (isBodyA)
+			{
+				worldAnchor = oldBody.GetWorldPoint(m_localAnchor1);
+				m_localAnchor1.CopyFrom (m_bodyA.GetLocalPoint (worldAnchor));
+				m_referenceAngle -= m_bodyA.GetAngle () - oldBody.GetAngle ();
+			}
+			else
+			{
+				worldAnchor = oldBody.GetWorldPoint(m_localAnchor2);
+				m_localAnchor2.CopyFrom (m_bodyB.GetLocalPoint (worldAnchor));
+				m_referenceAngle += m_bodyB.GetAngle () - oldBody.GetAngle ();
+			}
+trace ("222 m_referenceAngle = " + m_referenceAngle);
+		}
+
+		protected var mReachMaxMotorTorqueCallback:Function = null;
+		
+		public function SetReachMaxMotorTorqueCallback (callback:Function):void
+		{
+			mReachMaxMotorTorqueCallback = callback;
+		}
+
 	} // class
 } // package
 //#endif

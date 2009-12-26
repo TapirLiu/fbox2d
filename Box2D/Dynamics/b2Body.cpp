@@ -42,7 +42,7 @@ public function b2Body(bd:b2BodyDef, world:b2World)
 	{
 		m_flags |= e_fixedRotationFlag;
 	}
-	if (bd.autoSleep)
+	if (bd.allowSleep)
 	{
 		m_flags |= e_autoSleepFlag;
 	}
@@ -317,6 +317,7 @@ public function ResetMassData():void
 
 		var massData:b2MassData = new b2MassData ();
 		f.GetMassData(massData);
+		
 		m_mass += massData.mass;
 		//center += massData.mass * massData.center;
 		center.x += massData.mass * massData.center.x;
@@ -338,7 +339,6 @@ public function ResetMassData():void
 		m_mass = 1.0;
 		m_invMass = 1.0;
 	}
-
 
 	if (m_I > 0.0 && (m_flags & e_fixedRotationFlag) == 0)
  	{
