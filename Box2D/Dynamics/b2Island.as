@@ -76,8 +76,6 @@ package Box2D.Dynamics
 
 		//void Solve(const b2TimeStep& step, const b2Vec2& gravity, bool allowSleep);
 
-		//void SolveTOI(b2TimeStep& subStep);
-
 		public function AddBody (body:b2Body):void
 		{
 			//b2Assert(m_bodyCount < m_bodyCapacity);
@@ -100,7 +98,8 @@ package Box2D.Dynamics
 		//void Report(const b2ContactConstraint* constraints);
 
 		public var m_allocator:b2StackAllocator;
-		public var m_listener:b2ContactListener;
+		//public var m_listener:b2ContactListener;
+		public var m_listener:b2ContactPostSolveListener = null; // hacking
 
 		//b2Body** m_bodies;
 		//b2Contact** m_contacts;

@@ -49,7 +49,7 @@ public function Destroy(c:b2Contact):void
 	var bodyA:b2Body = fixtureA.GetBody();
 	var bodyB:b2Body = fixtureB.GetBody();
 
-	if (c.m_manifold.m_pointCount > 0)
+	if (c.IsTouching())
 	{
 		m_contactListener.EndContact(c);
 	}
@@ -166,7 +166,7 @@ public function Collide():void
 		}
 
 		// The contact persists.
-		c.Update(m_contactListener);
+		c.Update(m_contactListener, m_contactPreSolveListener);
 		c = c.GetNext();
 	}
 }
