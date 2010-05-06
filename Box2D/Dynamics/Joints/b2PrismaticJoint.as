@@ -38,6 +38,7 @@ package Box2D.Dynamics.Joints
 	/// can violate the constraint slightly. The joint translation is zero
 	/// when the local anchor points coincide in world space. Using local
 	/// anchors and a local axis helps when saving and loading a game.
+	/// @warning at least one body should by dynamic with a non-fixed rotation.
 	//struct b2PrismaticJointDef : public b2JointDef
 	//{
 		//@see b2PrismaticJointDef.as
@@ -142,7 +143,6 @@ package Box2D.Dynamics.Joints
 //***********************************************************************
 		
 		// call by b2Body
-		// this function should  NOT change the world position
 		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
 		{
 			if (jointEdge == m_edgeA)

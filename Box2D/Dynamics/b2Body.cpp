@@ -103,8 +103,6 @@ public function b2Body(bd:b2BodyDef, world:b2World)
 	m_I = 0.0;
 	m_invI = 0.0;
 
-	m_inertiaScale = bd.inertiaScale;
-
 	m_userData = bd.userData;
 
 	m_fixtureList = null;
@@ -308,7 +306,9 @@ public function ResetMassData():void
 	// Static and kinematic bodies have zero mass.
 	if (m_type == b2_staticBody || m_type == b2_kinematicBody)
 	{
-		//>> hacking
+		//m_sweep.c0 = m_sweep.c = m_xf.position;
+		
+		//>> hacking, in c++, here only one above calling
 		var num:int = 0;
 		for (f = m_fixtureList; f != null; f = f.m_next)
 		{
@@ -338,7 +338,6 @@ public function ResetMassData():void
 	}
 
 	//b2Assert(m_type == b2_dynamicBody);
-var nn:int = 0;
 	// Accumulate mass over all fixtures.
 	for (f = m_fixtureList; f != null; f = f.m_next)
 	{
@@ -365,6 +364,18 @@ var nn:int = 0;
 	}
 	else
 	{
+		//>>hacking
+		if (mViewZeroMassAsStatic)
+		{
+			SetType (b2_staticBody);
+			if (! mAutoUpdateMass)
+			{
+				ResetMassData ();
+			}
+			return;
+		}
+		//<<
+		
 		// Force all dynamic bodies to have a positive mass.
 		m_mass = 1.0;
 		m_invMass = 1.0;
@@ -374,7 +385,6 @@ var nn:int = 0;
  	{
 		// Center the inertia about the center of mass.
 		m_I -= m_mass * b2Math.b2Dot2 (center, center);
-		m_I *= m_inertiaScale;
 		//b2Assert(m_I > 0.0f);
 		m_invI = 1.0 / m_I;
 	}
@@ -425,6 +435,18 @@ public function SetMassData (massData:b2MassData):void
 
 	if (m_mass <= 0.0)
 	{
+		//>>hacking
+		if (mViewZeroMassAsStatic)
+		{
+			SetType (b2_staticBody);
+			if (! mAutoUpdateMass)
+			{
+				ResetMassData ();
+			}
+			return;
+		}
+		//<<
+		
 		m_mass = 1.0;
 	}
 
