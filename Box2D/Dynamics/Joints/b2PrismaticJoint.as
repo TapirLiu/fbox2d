@@ -32,13 +32,6 @@ package Box2D.Dynamics.Joints
 	import Box2D.Dynamics.b2TimeStep;
 	import Box2D.Dynamics.b2Body;
 
-	/// Prismatic joint definition. This requires defining a line of
-	/// motion using an axis and an anchor point. The definition uses local
-	/// anchor points and a local axis so that the initial configuration
-	/// can violate the constraint slightly. The joint translation is zero
-	/// when the local anchor points coincide in world space. Using local
-	/// anchors and a local axis helps when saving and loading a game.
-	/// @warning at least one body should by dynamic with a non-fixed rotation.
 	//struct b2PrismaticJointDef : public b2JointDef
 	//{
 		//@see b2PrismaticJointDef.as
@@ -95,8 +88,8 @@ package Box2D.Dynamics.Joints
 		/// Set the maximum motor force, usually in N.
 		//void SetMaxMotorForce(float32 force);
 
-		/// Get the current motor force, usually in N.
-		//float32 GetMotorForce() const;
+		/// Get the current motor force given the inverse time step, usually in N.
+		//float32 GetMotorForce(float32 inv_dt) const;
 
 	//protected:
 

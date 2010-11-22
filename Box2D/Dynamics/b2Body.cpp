@@ -165,7 +165,7 @@ public function CreateFixture(def:b2FixtureDef):b2Fixture
 	if (m_flags & e_activeFlag)
 	{
 		var broadPhase:b2BroadPhase = m_world.m_contactManager.m_broadPhase;
-		fixture.CreateProxy(broadPhase, m_xf);
+		fixture.CreateProxies(broadPhase, m_xf);
 	}
 
 	fixture.m_next = m_fixtureList;
@@ -261,13 +261,8 @@ public function DestroyFixture(fixture:b2Fixture):void
 	
 	if (m_flags & e_activeFlag)
 	{
-		//b2Assert(fixture->m_proxyId != b2BroadPhase::e_nullProxy);
 		var broadPhase:b2BroadPhase = m_world.m_contactManager.m_broadPhase;
-		fixture.DestroyProxy(broadPhase);
-	}
-	else
-	{
-		//b2Assert(fixture->m_proxyId == b2BroadPhase::e_nullProxy);
+		fixture.DestroyProxies(broadPhase);
 	}
 	
 	fixture.Destroy(null);
@@ -307,8 +302,10 @@ public function ResetMassData():void
 	if (m_type == b2_staticBody || m_type == b2_kinematicBody)
 	{
 		//m_sweep.c0 = m_sweep.c = m_xf.position;
+		//m_sweep.c0.x = m_sweep.c.x = m_xf.position.x;
+		//m_sweep.c0.y = m_sweep.c.y = m_xf.position.y;
 		
-		//>> hacking, in c++, here only one above calling
+		//>> hacking
 		var num:int = 0;
 		for (f = m_fixtureList; f != null; f = f.m_next)
 		{
@@ -455,6 +452,7 @@ public function SetMassData (massData:b2MassData):void
 	if (massData.I > 0.0 && (m_flags & e_fixedRotationFlag) == 0)
 	{
 		m_I = massData.I - m_mass * b2Math.b2Dot2 (massData.center, massData.center);
+		//b2Assert(m_I > 0.0f);
 		m_invI = 1.0 / m_I;
 	}
 
@@ -551,6 +549,8 @@ public function SynchronizeFixtures():void
 
 public function SetActive (flag:Boolean):void
 {
+	//b2Assert(m_world->IsLocked() == false);
+
 	if (flag == IsActive())
 	{
 		return;
@@ -567,7 +567,7 @@ public function SetActive (flag:Boolean):void
 		broadPhase = m_world.m_contactManager.m_broadPhase;
 		for (f = m_fixtureList; f != null; f = f.m_next)
 		{
-			f.CreateProxy(broadPhase, m_xf);
+			f.CreateProxies(broadPhase, m_xf);
 		}
 
 		// Contacts are created the next time step.
@@ -580,7 +580,7 @@ public function SetActive (flag:Boolean):void
 		broadPhase = m_world.m_contactManager.m_broadPhase;
 		for (f = m_fixtureList; f = null; f = f.m_next)
 		{
-			f.DestroyProxy(broadPhase);
+			f.DestroyProxies(broadPhase);
 		}
 
 		// Destroy the attached contacts.

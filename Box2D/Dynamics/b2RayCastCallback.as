@@ -13,7 +13,7 @@ package Box2D.Dynamics
 		/// return -1: ignore this fixture and continue
 		/// return 0: terminate the ray cast
 		/// return fraction: clip the ray to this point
-		/// return 1: don't clip the ray and continue
+		/// return 1: don't clip the ray and continue 
 		/// @param fixture the fixture hit by the ray
 		/// @param point the point of initial intersection
 		/// @param normal the normal vector at the point of intersection

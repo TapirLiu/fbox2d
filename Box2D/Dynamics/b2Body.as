@@ -142,7 +142,7 @@ package Box2D.Dynamics
 		/// @return the mass, usually in kilograms (kg).
 		//float32 GetMass() const;
 
-		/// Get the central rotational inertia of the body.
+		/// Get the rotational inertia of the body about the local origin.
 		/// @return the rotational inertia, usually in kg-m^2.
 		//float32 GetInertia() const;
 
@@ -296,6 +296,9 @@ package Box2D.Dynamics
 			public static const b2_staticBody:int = 0;
 			public static const b2_kinematicBody:int = 1;
 			public static const b2_dynamicBody:int = 2;
+			
+			// TODO_ERIN
+			//b2_bulletBody,
 		//};
 
 		// m_flags
@@ -349,7 +352,7 @@ package Box2D.Dynamics
 		public var m_contactList:b2ContactEdge;
 
 		public var m_mass:Number, m_invMass:Number;
-		
+
 		// Rotational inertia about the center of mass.
 		public var m_I:Number, m_invI:Number;
 
@@ -761,10 +764,10 @@ package Box2D.Dynamics
 			m_xf.position.y = m_sweep.c.y - tempV.y;
 		}
 
-		public function Advance(t:Number):void
+		public function Advance(alpha:Number):void
 		{
 			// Advance to the new safe time.
-			m_sweep.Advance(t);
+			m_sweep.Advance(alpha);
 			m_sweep.c.CopyFrom (m_sweep.c0);
 			m_sweep.a = m_sweep.a0;
 			SynchronizeTransform();
@@ -859,6 +862,15 @@ package Box2D.Dynamics
 			
 			// ...
 			return true; //new b2Vec2.b2Vec2_From2Numbers (dx, dy);
+		}
+
+		public function FlagForFilteringForAllContacts ():void
+		{
+			// Since the body type changed, we need to flag contacts for filtering.
+			for (var ce:b2ContactEdge = m_contactList; ce != null; ce = ce.next)
+			{
+				ce.contact.FlagForFiltering();
+			}
 		}
 
 	} // class

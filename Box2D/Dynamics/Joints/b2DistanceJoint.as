@@ -53,12 +53,18 @@ package Box2D.Dynamics.Joints
 		//b2Vec2 GetAnchorA() const;
 		//b2Vec2 GetAnchorB() const;
 
+		/// Get the reaction force given the inverse time step.
+		/// Unit is N.
 		//b2Vec2 GetReactionForce(float32 inv_dt) const;
+
+		/// Get the reaction torque given the inverse time step.
+		/// Unit is N*m. This is always zero for a distance joint.
 		//float32 GetReactionTorque(float32 inv_dt) const;
 
 		/// Set/get the natural length.
-		/// Manipulating the length can lead to non-physical behavior when the frequency is zero.
+		
 		//void SetLength(float32 length);
+		/// Manipulating the length can lead to non-physical behavior when the frequency is zero.
 		//float32 GetLength() const;
 
 		// Set/get frequency in Hz.

@@ -21,6 +21,5 @@ package Box2D.Dynamics
 			return collide;
 		}
 
-		
 	} // class
 } // package

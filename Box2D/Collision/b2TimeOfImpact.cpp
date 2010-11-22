@@ -27,8 +27,6 @@
 public static var b2_toiCalls:int, b2_toiIters:int, b2_toiMaxIters:int;
 public static var b2_toiRootIters:int, b2_toiMaxRootIters:int;
 
-public static var b2_toiMaxOptIters:int;
-
 //struct b2SeparationFunction
 //{
 	//@see b2SeparationFunction.as
@@ -56,8 +54,8 @@ public static function b2TimeOfImpact_ (output:b2TOIOutput, input:b2TOIInput):vo
 	const proxyA:b2DistanceProxy = input.proxyA;
 	const proxyB:b2DistanceProxy = input.proxyB;
 
-	var sweepA:b2Sweep = input.sweepA.Clone ();
-	var sweepB:b2Sweep = input.sweepB.Clone ();
+	var sweepA:b2Sweep = input.sweepA; //.Clone ();
+	var sweepB:b2Sweep = input.sweepB; //.Clone ();
 
 	// Large rotations can make the root finder fail, so we normalize the
 	// sweep angles.
@@ -247,9 +245,9 @@ public static function b2TimeOfImpact_ (output:b2TOIOutput, input:b2TOIInput):vo
 			}
 
 			b2_toiMaxRootIters = Math.max (b2_toiMaxRootIters, rootIterCount);
-
+			
 			++pushBackIter;
-
+			
 			if (pushBackIter == b2Settings.b2_maxPolygonVertices)
 			{
 				break;
