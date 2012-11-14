@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2007 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -44,7 +44,7 @@ package Box2D.Dynamics.Joints
 	public class b2PrismaticJoint extends b2Joint
 	{
 		include "b2PrismaticJoint.cpp";
-		
+
 	//public:
 		//b2Vec2 GetAnchorA() const;
 		//b2Vec2 GetAnchorB() const;
@@ -119,7 +119,7 @@ package Box2D.Dynamics.Joints
 		public var m_upperTranslation:Number;
 		public var m_maxMotorForce:Number;
 		public var m_motorSpeed:Number;
-		
+
 		public var m_enableLimit:Boolean;
 		public var m_enableMotor:Boolean;
 		//b2LimitState m_limitState;
@@ -130,11 +130,11 @@ package Box2D.Dynamics.Joints
 		{
 			return m_motorSpeed;
 		}
-		
+
 //***********************************************************************
 // hackings
 //***********************************************************************
-		
+
 		// call by b2Body
 		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
 		{
@@ -149,18 +149,31 @@ package Box2D.Dynamics.Joints
 				m_localAnchor2.y += dy;
 			}
 		}
+		
+      override public function NotifyAnchorPositionChanged (newWorldX:Number, newWorldY:Number, isAnchorA:Boolean):void
+      {
+         worldAnchor.x = newWorldX; worldAnchor.y = newWorldY;
+         
+         if (isAnchorA)
+         {
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchor1);
+         }
+         else
+         {
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchor2);
+         }
+      }
 
 		private static var worldAnchor:b2Vec2 = new b2Vec2 ();;
 		private static var worldAxis:b2Vec2 = new b2Vec2 ();
 		override protected function NotifyBodyChanged (oldBody:b2Body, isBodyA:Boolean):void
 		{
-			
 			if (isBodyA)
 			{
 				oldBody.GetWorldPoint_Output (m_localAnchor1, worldAnchor);
 				m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchor1);
 				m_refAngle -= m_bodyA.GetAngle () - oldBody.GetAngle ();
-				
+
 				oldBody.GetWorldVector_Output (m_localXAxis1, worldAxis);
 				m_bodyA.GetLocalVector_Output (worldAxis, m_localXAxis1);
 				b2Math.b2Cross_ScalarAndVector2_Output (1.0, m_localXAxis1, m_localYAxis1);
@@ -172,7 +185,62 @@ package Box2D.Dynamics.Joints
 				m_refAngle += m_bodyB.GetAngle () - oldBody.GetAngle ();
 			}
 		}
-
+      
+      override public function CopyRuntimeInfosFrom (fromJoint:b2Joint):void
+      {
+         var fromPrismaticJoint:b2PrismaticJoint = fromJoint as b2PrismaticJoint;
+         
+         m_refAngle = fromPrismaticJoint.m_refAngle - (fromPrismaticJoint.m_bodyB.GetAngle() - fromPrismaticJoint.m_bodyA.GetAngle());
+         //m_limitState = fromRevoluteJoint.m_limitState; // comment off for avoiding missing events
+         m_impulse.CopyFrom (fromPrismaticJoint.m_impulse);
+         m_motorImpulse = fromPrismaticJoint.m_motorImpulse;
+         
+         m_localAnchor1.CopyFrom (fromPrismaticJoint.m_localAnchor1); // maybe not correct
+         m_localAnchor2.CopyFrom (fromPrismaticJoint.m_localAnchor2); // maybe not correct
+      }
+		
+		// a very bad implementation
+		override public function OnFlipped (pointX:Number, pointY:Number, normalXX2:Number, normalYY2:Number, normalXY2:Number):void
+		{
+		   // assume bodies and shapes and anchor points are all flipped already.
+		   
+	      var tempVec:b2Vec2 = new b2Vec2 ();
+		   
+		   // ...
+		   
+		   // NotifyAnchorPositionChanged is already called, but anchorB was set wrongly. (slider joint is some different with other joints)
+		   m_bodyA.GetWorldPoint_Output (m_localAnchor1, tempVec);
+		   m_bodyB.GetLocalPoint_Output (tempVec, m_localAnchor2);
+		   
+		   // ...
+		   
+		   m_bodyA.GetWorldVector_Output (m_localXAxis1, tempVec);
+		   var flippedX:Number = tempVec.x - normalXX2 * tempVec.x - normalXY2 * tempVec.y;
+         var flippedY:Number = tempVec.y - normalXY2 * tempVec.x - normalYY2 * tempVec.y;
+         tempVec.x = flippedX;
+         tempVec.y = flippedY;
+         m_bodyA.GetLocalVector_Output (tempVec, m_localXAxis1);
+         b2Math.b2Cross_ScalarAndVector2_Output (1.0, m_localXAxis1, m_localYAxis1);
+         
+         // still has problems, maybe need more to do
+		}
+		
+		override public function OnScaled (scaleRatio:Number):void
+      {
+		   // assume bodies and shapes and anchor points are all flipped already.
+		   
+	      var tempVec:b2Vec2 = new b2Vec2 ();
+	      
+		   // NotifyAnchorPositionChanged is already called, but anchorB was set wrongly. (slider joint is some different with other joints)
+		   m_bodyA.GetWorldPoint_Output (m_localAnchor1, tempVec);
+		   m_bodyB.GetLocalPoint_Output (tempVec, m_localAnchor2);
+		   
+		   // ...
+         m_lowerTranslation *= scaleRatio;
+         m_upperTranslation *= scaleRatio;
+         m_motorSpeed *= scaleRatio;
+      }
+      
 	} // class
 } // pacakge
 //#endif

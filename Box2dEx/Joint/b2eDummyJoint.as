@@ -65,6 +65,20 @@ package Box2dEx.Joint
 				m_localAnchor2.y += dy;
 			}
 		}
+		
+      override public function NotifyAnchorPositionChanged (newWorldX:Number, newWorldY:Number, isAnchorA:Boolean):void
+      {
+         worldAnchor.x = newWorldX; worldAnchor.y = newWorldY;
+         
+         if (isAnchorA)
+         {
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchor1);
+         }
+         else
+         {
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchor2);
+         }
+      } 
 
 		private static var worldAnchor:b2Vec2 = new b2Vec2 ();
 			
@@ -81,6 +95,10 @@ package Box2dEx.Joint
 				m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchor2);
 			}
 		}
+      
+      override public function CopyRuntimeInfosFrom (fromJoint:b2Joint):void
+      {
+      }
 
 	} // class
 } // package

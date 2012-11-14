@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2010 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2010 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -70,7 +70,7 @@ override public function RayCast(output:b2RayCastOutput, input:b2RayCastInput, x
 	//B2_NOT_USED(childIndex);
 
 	var tempV:b2Vec2 = new b2Vec2 ();
-	
+
 	var p1:b2Vec2 = new b2Vec2 ();
 	var p2:b2Vec2 = new b2Vec2 ();
 	var d:b2Vec2 = new b2Vec2 ();
@@ -120,7 +120,8 @@ override public function RayCast(output:b2RayCastOutput, input:b2RayCastInput, x
 	}
 
 	var t:Number = numerator / denominator;
-	if (t < 0.0 || 1.0 < t)
+	//if (t < 0.0 || 1.0 < t) // r141
+	if (t < 0.0 || input.maxFraction < t) // changed in r200
 	{
 		return false;
 	}

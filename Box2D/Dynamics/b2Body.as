@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2009 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -42,10 +42,10 @@ package Box2D.Dynamics
 	/// A rigid body. These are created via b2World::CreateBody.
 	public class b2Body
 	{
-		include "b2Body.cpp"; 
-		
+		include "b2Body.cpp";
+
 	//public:
-	
+
 		/// Creates a fixture and attach it to this body. Use this function if you need
 		/// to set some fixture parameters, like friction. Otherwise you can create the
 		/// fixture directly from a shape.
@@ -296,7 +296,7 @@ package Box2D.Dynamics
 			public static const b2_staticBody:int = 0;
 			public static const b2_kinematicBody:int = 1;
 			public static const b2_dynamicBody:int = 2;
-			
+
 			// TODO_ERIN
 			//b2_bulletBody,
 		//};
@@ -364,7 +364,7 @@ package Box2D.Dynamics
 		public var m_userData:Object;
 
 	// inline
-		
+
 		//b2BodyType b2Body::GetType() const
 		public function GetType():int
 		{
@@ -447,6 +447,7 @@ package Box2D.Dynamics
 
 		public function GetInertia():Number
 		{
+		   // notice for porting: this is the desired result now.
 			return m_I + m_mass * b2Math.b2Dot2(m_sweep.localCenter, m_sweep.localCenter);
 		}
 
@@ -514,6 +515,8 @@ package Box2D.Dynamics
 			temp.x += m_linearVelocity.x;
 			temp.y += m_linearVelocity.y;
 			
+			//NOTICE for porting: here shows the linear velocity is the velocity at centroid instead of position. 
+
 			return temp;
 		}
 
@@ -566,10 +569,13 @@ package Box2D.Dynamics
 				if ((m_flags & e_awakeFlag) == 0)
 				{
 					m_flags |= e_awakeFlag;
-					m_sleepTime = 0.0;
+               m_sleepTime = 0.0; // bug to fix: should be put out of the if-block
 				}
 			}
 			else
+			//>>hacking
+			if (IsSleepingAllowed ())
+			//<<
 			{
 				m_flags &= ~e_awakeFlag;
 				m_sleepTime = 0.0;
@@ -632,7 +638,7 @@ package Box2D.Dynamics
 		{
 			return m_fixtureList;
 		}
-		
+
 		//inline const b2Fixture* b2Body::GetFixtureList() const
 		//{
 		//	return m_fixtureList;
@@ -713,7 +719,7 @@ package Box2D.Dynamics
 
 			m_torque += torque;
 		}
-
+		
 		public function ApplyLinearImpulse(impulse:b2Vec2, point:b2Vec2):void
 		{
 			if (m_type != b2_dynamicBody)
@@ -786,9 +792,33 @@ package Box2D.Dynamics
 //******************************************************************************
 // hacking
 //******************************************************************************
-		
+
+      public function ClearVelocities ():void
+      {
+         m_linearVelocity.x = 0;
+         m_linearVelocity.y = 0;
+         m_angularVelocity = 0;
+      }
+
+      public function ClearPowers ():void
+      {
+         m_force.x = 0;
+         m_force.y = 0;
+         m_torque = 0;
+      }
+
+      public function GetAccForce ():b2Vec2
+      {
+         return m_force;
+      }
+
+      public function GetAccTorque ():Number
+      {
+         return m_torque;
+      }
+
 		private var mAutoUpdateMass:Boolean = true;
-		
+
 		public function SetAutoUpdateMass (auto:Boolean):void
 		{
 			mAutoUpdateMass = auto;
@@ -801,7 +831,7 @@ package Box2D.Dynamics
 		}
 
 		private var mViewZeroMassAsStatic:Boolean = false;
-		
+
 		public function SetViewZeroMassAsStatic (asStatic:Boolean):void
 		{
 			mViewZeroMassAsStatic = asStatic;
@@ -814,52 +844,65 @@ package Box2D.Dynamics
 			{
 				return false;// null;
 			}
-			
+
 			var dx:Number = - m_sweep.localCenter.x;
 			var dy:Number = - m_sweep.localCenter.y;
-			
+
 			var abs_dx:Number = Math.abs (dx);
 			var abs_dy:Number = Math.abs (dy);
-			
+
 			if (abs_dx < Number.MIN_VALUE && abs_dy < Number.MIN_VALUE)
 				return false;// null;
-			
+
+      // velocity
+      
+         // velocity should not change, for m_linearVelocity is the velocity at centroid instead of position
+         // see GetLinearVelocityFromWorldPoint
+         
+         //tempV.x = m_sweep.c.x - m_xf.position.x;
+         //tempV.y = m_sweep.c.y - m_xf.position.y;
+         //b2Math.b2Cross_ScalarAndVector2_Output (m_angularVelocity, tempV, tempVb);
+         //m_linearVelocity.x += tempVb.x;
+         //m_linearVelocity.y += tempVb.y;
+
+      // position
+
 			m_xf.position.x = m_sweep.c.x;
 			m_xf.position.y = m_sweep.c.y;
-			
+
 			m_sweep.localCenter.x = 0.0;
 			m_sweep.localCenter.y = 0.0;
-			
+      
 		// adjust shapes local vertices
-			
+
 			var fixture:b2Fixture = m_fixtureList;
 			while (fixture != null)
 			{
 				fixture.GetShape ().OnBodyLocalCenterChanged (dx, dy);
-				
+
 				fixture = fixture.m_next;
 			}
-			
+
 		// adjust local anchor points
-			
+
 			var jn:b2JointEdge = m_jointList;
 			while (jn != null)
 			{
 				jn.joint.OnBodyLocalCenterChanged (dx, dy, jn);
-				
+
 				jn = jn.next;
 			}
-			
+
 		// adjust contact m points manifoild local points
-			
+
 			var ce:b2ContactEdge = m_contactList;
 			while (ce != null)
 			{
 				ce.contact.OnBodyLocalCenterChanged (dx, dy, this);
-				
+
 				ce = ce.next;
 			}
-			
+
 			// ...
 			return true; //new b2Vec2.b2Vec2_From2Numbers (dx, dy);
 		}

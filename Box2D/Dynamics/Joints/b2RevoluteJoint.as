@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2007 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@ package Box2D.Dynamics.Joints
 {
 
 	//#include <Box2D/Dynamics/Joints/b2Joint.h>
-	
+
 	import Box2D.Common.b2Settings;
 	import Box2D.Common.b2Math;
 	import Box2D.Common.b2Vec2;
@@ -43,7 +43,7 @@ package Box2D.Dynamics.Joints
 	public class b2RevoluteJoint extends b2Joint
 	{
 		include "b2RevoluteJoint.cpp";
-		
+
 	//public:
 		//b2Vec2 GetAnchorA() const;
 		//b2Vec2 GetAnchorB() const;
@@ -112,7 +112,7 @@ package Box2D.Dynamics.Joints
 
 		public var m_mass:b2Mat33 = new b2Mat33 ();			// effective mass for point-to-point constraint.
 		public var m_motorMass:Number;	// effective mass for motor/limit angular constraint.
-		
+
 		public var m_enableMotor:Boolean;
 		public var m_maxMotorTorque:Number;
 		public var m_motorSpeed:Number;
@@ -129,11 +129,18 @@ package Box2D.Dynamics.Joints
 		{
 			return m_motorSpeed;
 		}
-		
+
 //***********************************************************************
 // hackings
 //***********************************************************************
-		
+
+		protected var mReachMaxMotorTorqueCallback:Function = null;
+
+		public function SetReachMaxMotorTorqueCallback (callback:Function):void
+		{
+			mReachMaxMotorTorqueCallback = callback;
+		}
+
 		// call by b2Body
 
 		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
@@ -149,9 +156,23 @@ package Box2D.Dynamics.Joints
 				m_localAnchor2.y += dy;
 			}
 		}
+		
+      override public function NotifyAnchorPositionChanged (newWorldX:Number, newWorldY:Number, isAnchorA:Boolean):void
+      {
+         worldAnchor.x = newWorldX; worldAnchor.y = newWorldY;
+         
+         if (isAnchorA)
+         {
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchor1);
+         }
+         else
+         {
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchor2);
+         }
+      }
 
 		private static var worldAnchor:b2Vec2 = new b2Vec2 ();
-			
+
 		override protected function NotifyBodyChanged (oldBody:b2Body, isBodyA:Boolean):void
 		{
 			if (isBodyA)
@@ -167,12 +188,40 @@ package Box2D.Dynamics.Joints
 				m_referenceAngle += m_bodyB.GetAngle () - oldBody.GetAngle ();
 			}
 		}
-
-		protected var mReachMaxMotorTorqueCallback:Function = null;
 		
-		public function SetReachMaxMotorTorqueCallback (callback:Function):void
+      override public function CopyRuntimeInfosFrom (fromJoint:b2Joint):void
+      {
+         var fromRevoluteJoint:b2RevoluteJoint = fromJoint as b2RevoluteJoint;
+         
+         m_referenceAngle = fromRevoluteJoint.m_referenceAngle - (fromRevoluteJoint.m_bodyB.GetAngle() - fromRevoluteJoint.m_bodyA.GetAngle());
+         //m_limitState = fromRevoluteJoint.m_limitState; // comment off for avoiding missing events
+         m_impulse.CopyFrom (fromRevoluteJoint.m_impulse);
+         m_motorImpulse = fromRevoluteJoint.m_motorImpulse;
+         
+         // ...
+         mFlipped = fromRevoluteJoint.mFlipped;
+      }
+		
+		internal var mFlipped:Boolean = false;
+		override public function OnFlipped (pointX:Number, pointY:Number, normalXX2:Number, normalYY2:Number, normalXY2:Number):void
 		{
-			mReachMaxMotorTorqueCallback = callback;
+		   // assume bodies and shapes and anchor points are all flipped already.
+		   
+		   // ...
+		   
+		   mFlipped = ! mFlipped;
+		   
+		   //var tempVec:b2Vec2 = m_localAnchor1;
+		   //m_localAnchor2 = m_localAnchor1;
+		   //m_localAnchor1 = tempVec;
+		   
+		   //m_referenceAngle = - m_referenceAngle;
+		   
+		  // var temp:Number = m_lowerAngle;
+		  // m_lowerAngle = m_upperAngle;
+		  // m_upperAngle = temp;
+         
+         // maybe need more to do
 		}
 
 	} // class

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2009 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -73,11 +73,11 @@ package Box2D.Dynamics.Joints
 		public var m_impulse:b2Vec3 = new b2Vec3 ();
 
 		public var m_mass:b2Mat33 = new b2Mat33 ();
-		
+
 //***********************************************************************
 // hackings
 //***********************************************************************
-		
+
 		// call by b2Body
 		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
 		{
@@ -92,7 +92,46 @@ package Box2D.Dynamics.Joints
 				m_localAnchorB.y += dy;
 			}
 		}
+		
+      override public function NotifyAnchorPositionChanged (newWorldX:Number, newWorldY:Number, isAnchorA:Boolean):void
+      {
+         worldAnchor.x = newWorldX; worldAnchor.y = newWorldY;
+         
+         if (isAnchorA)
+         {
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchorA);
+         }
+         else
+         {
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchorB);
+         }
+      }		
 
+      private static var worldAnchor:b2Vec2 = new b2Vec2 ();
+
+      override protected function NotifyBodyChanged (oldBody:b2Body, isBodyA:Boolean):void
+      {
+         if (isBodyA)
+         {
+            oldBody.GetWorldPoint_Output (m_localAnchorA, worldAnchor);
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchorA);
+            m_referenceAngle -= m_bodyA.GetAngle () - oldBody.GetAngle ();
+         }
+         else
+         {
+            oldBody.GetWorldPoint_Output (m_localAnchorB, worldAnchor);
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchorB);
+            m_referenceAngle += m_bodyB.GetAngle () - oldBody.GetAngle ();
+         }
+      }
+      
+      override public function CopyRuntimeInfosFrom (fromJoint:b2Joint):void
+      {
+         var fromWeldJoint:b2WeldJoint = fromJoint as b2WeldJoint;
+         
+         m_referenceAngle = fromWeldJoint.m_referenceAngle - (fromWeldJoint.m_bodyB.GetAngle() - fromWeldJoint.m_bodyA.GetAngle());
+         m_impulse.CopyFrom (fromWeldJoint.m_impulse);
+      }
 	}
 }
 

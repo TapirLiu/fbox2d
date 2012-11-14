@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2007 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -47,7 +47,7 @@ package Box2D.Dynamics.Joints
 	public class b2DistanceJoint extends b2Joint
 	{
 		include "b2DistanceJoint.cpp";
-		
+
 	//public:
 
 		//b2Vec2 GetAnchorA() const;
@@ -62,7 +62,7 @@ package Box2D.Dynamics.Joints
 		//float32 GetReactionTorque(float32 inv_dt) const;
 
 		/// Set/get the natural length.
-		
+
 		//void SetLength(float32 length);
 		/// Manipulating the length can lead to non-physical behavior when the frequency is zero.
 		//float32 GetLength() const;
@@ -94,9 +94,9 @@ package Box2D.Dynamics.Joints
 		public var m_mass:Number;
 		public var m_length:Number;
 	//}
-	
+
 	// inline
-	
+
 		public function SetLength(length:Number):void
 		{
 			m_length = length;
@@ -130,7 +130,9 @@ package Box2D.Dynamics.Joints
 //***********************************************************************
 // hackings
 //***********************************************************************
-		
+
+      public var mSpringConstant:Number = -1.0;
+
 		// call by b2Body
 		override public function OnBodyLocalCenterChanged (dx:Number, dy:Number, jointEdge:b2JointEdge):void
 		{
@@ -145,9 +147,23 @@ package Box2D.Dynamics.Joints
 				m_localAnchor2.y += dy;
 			}
 		}
+		
+      override public function NotifyAnchorPositionChanged (newWorldX:Number, newWorldY:Number, isAnchorA:Boolean):void
+      {
+         worldAnchor.x = newWorldX; worldAnchor.y = newWorldY;
+         
+         if (isAnchorA)
+         {
+            m_bodyA.GetLocalPoint_Output (worldAnchor, m_localAnchor1);
+         }
+         else
+         {
+            m_bodyB.GetLocalPoint_Output (worldAnchor, m_localAnchor2);
+         }
+      }		
 
 		private static var worldAnchor:b2Vec2 = new b2Vec2 ();
-			
+
 		override protected function NotifyBodyChanged (oldBody:b2Body, isBodyA:Boolean):void
 		{
 			if (isBodyA)
@@ -162,7 +178,18 @@ package Box2D.Dynamics.Joints
 			}
 		}
 		
-		public var mSpringConstant:Number = -1.0;
+		override public function CopyRuntimeInfosFrom (fromJoint:b2Joint):void
+      {
+         var fromDistanceJoint:b2DistanceJoint = fromJoint as b2DistanceJoint;
+         
+         m_impulse = fromDistanceJoint.m_impulse;
+         m_length = fromDistanceJoint.m_length;
+      }
+		
+		override public function OnScaled (scaleRatio:Number):void
+      {
+          m_length *= scaleRatio;
+      }
 
 	} // class
 } // package

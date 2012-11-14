@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2007 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -93,7 +93,7 @@ override public function InitVelocityConstraints(step:b2TimeStep):void
 	
 	var b1:b2Body = m_bodyA;
 	var b2:b2Body = m_bodyB;
-
+	
 	if (m_enableMotor || m_enableLimit)
 	{
 		// You cannot create a rotation limit between bodies that
@@ -145,6 +145,7 @@ override public function InitVelocityConstraints(step:b2TimeStep):void
 	if (m_enableLimit)
 	{
 		var jointAngle:Number = b2.m_sweep.a - b1.m_sweep.a - m_referenceAngle;
+	
 		if (Math.abs(m_upperAngle - m_lowerAngle) < 2.0 * b2Settings.b2_angularSlop)
 		{
 			m_limitState = b2Joint.e_equalLimits;
@@ -224,7 +225,7 @@ override public function SolveVelocityConstraints(step:b2TimeStep):void
 
 	var b1:b2Body = m_bodyA;
 	var b2:b2Body = m_bodyB;
-
+	
 	v1.CopyFrom (b1.m_linearVelocity);
 	var w1:Number = b1.m_angularVelocity;
 	v2.CopyFrom (b2.m_linearVelocity);
@@ -285,10 +286,11 @@ override public function SolveVelocityConstraints(step:b2TimeStep):void
 			
 			if (newImpulse < 0.0)
 			{
-				//b2Vec2 reduced = m_mass.Solve22(-Cdot1);
-				tempV.x = - Cdot1.x;
-				tempV.y = - Cdot1.y;
-				reduced = m_mass.Solve22 (tempV);
+            //b2Vec2 rhs = -Cdot1 + m_impulse.z * b2Vec2(m_mass.col3.x, m_mass.col3.y);
+            //b2Vec2 reduced = m_mass.Solve22(rhs);
+            tempV.x = -Cdot1.x +  m_impulse.z * m_mass.col3.x;
+            tempV.y = -Cdot1.y +  m_impulse.z * m_mass.col3.y;
+            reduced = m_mass.Solve22 (tempV);
 				
 				impulseVec3.x = reduced.x;
 				impulseVec3.y = reduced.y;
@@ -296,6 +298,13 @@ override public function SolveVelocityConstraints(step:b2TimeStep):void
 				m_impulse.x += reduced.x;
 				m_impulse.y += reduced.y;
 				m_impulse.z = 0.0;
+			}
+			else
+			{
+			   //m_impulse += impulse;
+			   m_impulse.x += impulseVec3.x;
+			   m_impulse.y += impulseVec3.y;
+			   m_impulse.z += impulseVec3.z;
 			}
 		}
 		else if (m_limitState == e_atUpperLimit)
@@ -303,9 +312,10 @@ override public function SolveVelocityConstraints(step:b2TimeStep):void
 			newImpulse = m_impulse.z + impulseVec3.z;
 			if (newImpulse > 0.0)
 			{
-				//b2Vec2 reduced = m_mass.Solve22(-Cdot1);
-				tempV.x = - Cdot1.x;
-				tempV.y = - Cdot1.y;
+            //b2Vec2 rhs = -Cdot1 + m_impulse.z * b2Vec2(m_mass.col3.x, m_mass.col3.y);
+            //b2Vec2 reduced = m_mass.Solve22(rhs);
+				tempV.x = -Cdot1.x + m_impulse.z * m_mass.col3.x;
+				tempV.y = -Cdot1.y + m_impulse.z * m_mass.col3.y;
 				reduced = m_mass.Solve22 (tempV);
 				
 				impulseVec3.x = reduced.x;
@@ -315,6 +325,13 @@ override public function SolveVelocityConstraints(step:b2TimeStep):void
 				m_impulse.y += reduced.y;
 				m_impulse.z = 0.0;
 			}
+         else
+         {
+            //m_impulse += impulse;
+            m_impulse.x += impulseVec3.x;
+            m_impulse.y += impulseVec3.y;
+            m_impulse.z += impulseVec3.z;
+         }
 		}
 
 		//b2Vec2 P(impulse.x, impulse.y);
@@ -385,7 +402,7 @@ override public function SolvePositionConstraints(baumgarte:Number):Boolean
 
 	var b1:b2Body = m_bodyA;
 	var b2:b2Body = m_bodyB;
-
+	
 	var angularError:Number = 0.0;
 	var positionError:Number = 0.0;
 
@@ -393,6 +410,7 @@ override public function SolvePositionConstraints(baumgarte:Number):Boolean
 	if (m_enableLimit && m_limitState != e_inactiveLimit)
 	{
 		var angle:Number = b2.m_sweep.a - b1.m_sweep.a - m_referenceAngle;
+	
 		var limitImpulse:Number = 0.0;
 		
 		var C:Number;
@@ -591,9 +609,13 @@ public function IsLimitEnabled():Boolean
 
 public function EnableLimit(flag:Boolean):void
 {
-	m_bodyA.SetAwake(true);
-	m_bodyB.SetAwake(true);
-	m_enableLimit = flag;
+   if (flag != m_enableLimit)
+   {
+   	m_bodyA.SetAwake(true);
+   	m_bodyB.SetAwake(true);
+   	m_enableLimit = flag;
+   	m_impulse.z = 0.0;
+   }
 }
 
 public function GetLowerLimit():Number
@@ -609,8 +631,12 @@ public function GetUpperLimit():Number
 public function SetLimits(lower:Number, upper:Number):void
 {
 	//b2Assert(lower <= upper);
-	m_bodyA.SetAwake(true);
-	m_bodyB.SetAwake(true);
-	m_lowerAngle = lower;
-	m_upperAngle = upper;
+	if (lower != m_lowerAngle || upper != m_upperAngle)
+   {
+   	m_bodyA.SetAwake(true);
+   	m_bodyB.SetAwake(true);
+   	m_impulse.z = 0.0;
+   	m_lowerAngle = lower;
+   	m_upperAngle = upper;
+	}
 }

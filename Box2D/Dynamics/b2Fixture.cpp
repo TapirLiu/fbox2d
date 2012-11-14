@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2006-2009 Erin Catto http://www.gphysics.com
+* Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -52,7 +52,8 @@ public function Create(allocator:b2BlockAllocator, body:b2Body, xf:b2Transform, 
 	m_body = body;
 	m_next = null;
 
-	m_filter = def.filter;
+	//m_filter = def.filter; // bug
+	m_filter.CopyFrom (def.filter);
 
 	m_isSensor = def.isSensor;
 
@@ -164,7 +165,7 @@ private static var displacement:b2Vec2 = new b2Vec2 ();
 public function Synchronize(broadPhase:b2BroadPhase, transform1:b2Transform, transform2:b2Transform):void
 {
 	if (m_proxyCount == 0)
-	{	
+	{
 		return;
 	}
 
@@ -176,7 +177,7 @@ public function Synchronize(broadPhase:b2BroadPhase, transform1:b2Transform, tra
 		//b2AABB aabb1, aabb2;
 		m_shape.ComputeAABB(aabb1, transform1, proxy.childIndex);
 		m_shape.ComputeAABB(aabb2, transform2, proxy.childIndex);
-	
+
 		proxy.aabb.CombineTwo(aabb1, aabb2);
 
 		//b2Vec2 displacement = transform2.position - transform1.position;
@@ -189,7 +190,8 @@ public function Synchronize(broadPhase:b2BroadPhase, transform1:b2Transform, tra
 
 public function SetFilterData(filter:b2Filter):void
 {
-	m_filter = filter;
+	//m_filter = filter; // bug
+	m_filter.CopyFrom (filter);
 
 	if (m_body == null)
 	{
@@ -207,7 +209,7 @@ public function SetFilterData(filter:b2Filter):void
 		{
 			contact.FlagForFiltering();
 		}
-		
+
 		edge = edge.next;
 	}
 }

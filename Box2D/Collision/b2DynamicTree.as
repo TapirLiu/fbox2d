@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2009 Erin Catto http://www.gphysics.com
+* Copyright (c) 2009 Erin Catto http://www.box2d.org
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@ package Box2D.Collision
 	import Box2D.Common.b2Math;
 	import Box2D.Common.b2Vec2;
 	import Box2D.Common.b2Settings;
-	import Box2D.Common.b2GrowableStack;
+	//import Box2D.Common.b2GrowableStack;
 
 	/// A dynamic AABB tree broad-phase, inspired by Nathanael Presson's btDbvt.
 
@@ -48,9 +48,9 @@ package Box2D.Collision
 	public class b2DynamicTree
 	{
 		include "b2DynamicTree.cpp";
-		
+
 		public static const b2_nullNode:int = -1;
-		
+
 	//public:
 
 		/// Constructing the tree initializes the node pool.
@@ -129,7 +129,7 @@ package Box2D.Collision
 	//};
 
 	//inline
-	
+
 		public function GetUserData(proxyId:int):Object
 		{
 			//b2Assert(0 <= proxyId && proxyId < m_nodeCapacity);
@@ -147,12 +147,15 @@ package Box2D.Collision
 		public function Query(callback:b2QueryCallbackOwner, aabb:b2AABB):void
 		{
 			//b2GrowableStack<int32, 256> stack;
-			var stack:b2GrowableStack = new b2GrowableStack (256);
-			stack.Push(m_root);
+         //var stack:b2GrowableStack = new b2GrowableStack (256); // bug!!!, crash on iOS. Ill on PC.
+         //var stack:b2GrowableStack = new b2GrowableStack (0); // Still crash on iOS
+         var stack:Array = new Array ();
+			stack.push(m_root);
 
-			while (stack.GetCount() > 0)
+         //while (stack.GetCount() > 0)
+         while (stack.length > 0)
 			{
-				var nodeId:int = int (stack.Pop());
+				var nodeId:int = int (stack.pop());
 				if (nodeId == b2_nullNode)
 				{
 					continue;
@@ -160,7 +163,7 @@ package Box2D.Collision
 
 				//const b2DynamicTreeNode* node = m_nodes + nodeId;
 				const node:b2DynamicTreeNode = m_nodes [nodeId];
-				
+
 				if (b2Collision.b2TestOverlap(node.aabb, aabb))
 				{
 					if (node.IsLeaf())
@@ -173,8 +176,8 @@ package Box2D.Collision
 					}
 					else
 					{
-						stack.Push(node.child1);
-						stack.Push(node.child2);
+						stack.push(node.child1);
+						stack.push(node.child2);
 					}
 				}
 			}
@@ -182,7 +185,7 @@ package Box2D.Collision
 
 		//template <typename T>
 		//inline void b2DynamicTree::RayCast(T* callback, const b2RayCastInput& input) const
-		public function RayCast(callback:b2RayCastCallbackOwner, input:b2RayCastInput):void		
+		public function RayCast(callback:b2RayCastCallbackOwner, input:b2RayCastInput):void
 		{
 			//b2Vec2 p1 = input.p1;
 			//b2Vec2 p2 = input.p2;
@@ -216,12 +219,15 @@ package Box2D.Collision
 			//}
 
 			//b2GrowableStack<int32, 256> stack;
-			var stack:b2GrowableStack = new b2GrowableStack (256);
-			stack.Push(m_root);
+         //var stack:b2GrowableStack = new b2GrowableStack (256); // bug!!!, crash on iOS. Ill on PC.
+         //var stack:b2GrowableStack = new b2GrowableStack (0); // Still crash on iOS
+         var stack:Array = new Array ();
+			stack.push(m_root);
 
-			while (stack.GetCount() > 0)
+         //while (stack.GetCount() > 0)
+         while (stack.length > 0)
 			{
-				var nodeId:int = int (stack.Pop());
+				var nodeId:int = int (stack.pop());
 				if (nodeId == b2_nullNode)
 				{
 					continue;
@@ -274,8 +280,8 @@ package Box2D.Collision
 				}
 				else
 				{
-					stack.Push(node.child1);
-					stack.Push(node.child2);
+					stack.push(node.child1);
+					stack.push(node.child2);
 				}
 			}
 		}
